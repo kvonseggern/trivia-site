@@ -34,9 +34,11 @@ def check_answers_func(pk):
     formset = QRFormSet(queryset=query)
     instances = formset.save(commit=False)
     for instance in instances:
-        if instance.response.lower() == instance.question.answer.lower():
-            instance.correct = True
-            instance.save()
+        for answer in instance.question.answer_set():
+            # I need to move the strip method someplace else
+            if instance.response.lower().strip() == answer.lower():
+                instance.correct = True
+                instance.save()
 
 # Begin game management views #############################
 
@@ -322,7 +324,7 @@ class RoundCreate(UserPassesTestMixin, CreateView):
 def manage_questions(request, round_pk):
     round_obj = Round.objects.get(id=round_pk)
     QuestionInlineFormSet = inlineformset_factory(
-        Round, Question, fields=('question', 'answer'), extra=10
+        Round, Question, fields=('question', 'answer', 'alt_answers',), extra=10
     )
     if request.method == "POST":
         formset = QuestionInlineFormSet(request.POST, request.FILES, instance=round)

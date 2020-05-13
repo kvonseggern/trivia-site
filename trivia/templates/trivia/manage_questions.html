@@ -6,7 +6,7 @@
 <div class="breadcrumbs">
 <a href="{% url 'trivia:index' %}">Home</a>
 &rsaquo; <a href="{% url 'trivia:manage' %}">Manage</a>
-&rsaquo; {{  }}
+&rsaquo; Questions
 </div>
 {% endblock %}
 
@@ -28,6 +28,7 @@
             <tr>
                 <td>{{ form.question }}</td>
                 <td>{{ form.answer }}</td>
+                <td>{{ form.alt_answers }}</td>
             </tr>
         {% endfor %}
         </tbody>
