@@ -1,0 +1,20 @@
+{% extends 'base_site.html' %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
+&rsaquo; <a href="{% url 'trivia:game_detail' round.game_id %}">{{ round.game }}</a>
+&rsaquo; Round Status
+</div>
+{% endblock %}
+
+{% block content %}
+
+<form method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Submit">
+</form>
+
+{% endblock %}

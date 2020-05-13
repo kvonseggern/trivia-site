@@ -1,0 +1,32 @@
+{% extends 'base_site.html' %}
+
+{% block title %}Trivia! | Game List{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; Game List
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h1>List of Recent Games</h1>
+{% if game_list %}
+<table>
+    <tr>
+        <th>Game Name</th>
+        <th>Publish Date</th>
+    </tr>
+    {% for game in game_list %}
+    <tr>
+        <td><a href="{% url 'trivia:game_detail' game.id %}">{{ game.game_title }}</a></td>
+        <td>{{ game.pub_date }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+    <p>No games are available.</p>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base_site.html' %}
+
+{% block title %}Trivia!{% endblock %}
+
+{% block content %}
+
+<h1>Welcome to Trivia!</h1>
+<p>See <a href="{% url 'trivia:games' %}">available games</a></p>
+
+{% if not user.is_authenticated %}
+<p>Please <a href="{% url 'login' %}">sign in</a> if you are a returning player.</p>
+<p>Please <a href="{% url 'trivia:signup' %}">create an account</a> if you're here for the first time.</p>
+{% endif %}
+{% if user.is_staff %}
+<p>If you have permission, <a href="{% url 'trivia:manage' %}">go to manage games.</a></p>
+{% endif %}
+
+{% endblock %}

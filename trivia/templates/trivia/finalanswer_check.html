@@ -1,0 +1,48 @@
+{% extends 'base_site.html' %}
+
+{% block title %}Final Answer Check{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
+&rsaquo; <a href="{% url 'trivia:game_detail' finalanswer.finalround.game.id %}">{{ finalanswer.finalround.game }}</a>
+&rsaquo; Final Answer Check
+</div>
+{% endblock %}
+
+{% block content %}
+
+<p>{{ final_answers.first.finalround.question }}</p>
+<strong>
+<p>{{ final_answers.first.finalround.answer }}</p>
+</strong>
+
+<form method="post">
+    {% csrf_token %}
+    <table>
+        <thead>
+            <th>Player</th>
+            <th>Answer</th>
+            <th>Correct?</th>
+        </thead>
+        <tbody>
+            {{ formset.management_form }}
+            {% for form in formset %}
+                {{ form.id }}
+                <tr>
+                    {% for a in final_answers %}
+                    {% if a.id == form.instance.id %}
+                    <td>{{ a.player }}</td>
+                    <td>{{ a.answer }}</td>
+                    {% endif %}
+                    {% endfor %}
+                    <td>{{ form.correct }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    <input type="submit" value="Submit">
+</form>
+
+{% endblock %}

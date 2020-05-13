@@ -1,0 +1,54 @@
+{% extends 'base_site.html' %}
+
+{% block title %}{{ round }} | Review{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
+&rsaquo; <a href="{% url 'trivia:game_detail' round.game_id %}">{{ round.game }}</a>
+&rsaquo; {{ round }}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h1>{{ round }}: Round in Review</h1>
+
+<table>
+    <thead>
+        <th>Question</th>
+        <th>Answer</th>
+        <th>Points</th>
+        {% for p in round.game.player.all %}
+        <th>
+            {{ p }}
+        </th>
+        {% endfor %}
+    </thead>
+    <tbody>
+        {% for q in round.question_set.all %}
+        <tr>
+            <td>{{ q }}</td>
+            <td>{{ q.answer }}</td>
+            <td>{{ q.points }}</td>
+            {% for p in round.game.player.all %}
+            <td>
+            {% for i in q.questionresponse_set.all %}
+                {% if p == i.player %}
+                {% if i.question == q %}
+                {% if i.correct == True %}
+                <strong>
+                {% endif %}
+                {{ i }}
+                {% endif %}
+                {% endif %}
+            {% endfor %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

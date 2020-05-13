@@ -1,0 +1,123 @@
+{% extends 'base_site.html' %}
+
+{% block title %}{{ game }} | Game Detail{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
+&rsaquo; {{ game }}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h1>{{ game }}</h1>
+{% if game.round_status_sum == 0 %}
+<a href="{% url 'trivia:double_round' game.id %}">
+<input type="submit" value="Choose a Round to Double" />
+</a>
+{% endif %}
+{% if game.round_set.all %}
+<table border cellpadding=10>
+    <thead>
+        <tr>
+            <th>Round Name</th>
+            {% for round in game.round_set.all %}
+                <th>
+                    <a href="{% url 'trivia:round_review' round.id %}">{{ round }}</a>
+                </th>
+            {% endfor %}
+            {% if game.finalround_set.all %}
+            {% for f in game.finalround_set.all %}
+            {% if f.status == '0' %}
+            <th>Final Round</th>
+            {% else %}
+            <th>{{ f.category }}</th>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+            <th>Total Score</th>
+        </tr>
+        <tr>
+            <th>Status</th>
+            {% for round in game.round_set.all %}
+            <th><a
+                {% if request.user.is_staff %}
+                href="{% url 'trivia:round_update' round.id %}"
+                {% endif %}
+                >{{ round.get_status_display }}</a></th>
+            {% endfor %}
+            {% for r in game.finalround_set.all %}
+            <th><a
+                {% if request.user.is_staff %}
+                href="{% url 'trivia:finalround_update' r.id %}"
+                {% endif %}
+                >{{ r.get_status_display }}</a></th>
+            {% endfor %}
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for k, v in game.score_game.items %}
+        <tr>
+            <td>{{ k }}</td>
+            {% for a, b in v.items %}
+            <td>
+                {% for round in a.doubleround_set.all %}
+                {% if round.player == k %}
+                <strong>
+                {% endif %}
+                {% endfor %}
+                    {% if a != 'total' %}
+                    <a href="{% url 'trivia:check_answers' game=game.id round=a.id player=k.id %}">
+                    {% endif %}
+                    {{ b }}
+                    </a>
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        <tr>
+            <td></td>
+                {% for round in game.round_set.all %}
+                <td>
+                {% if round.get_status_display == 'Answer Time' %}
+                <a href="{% url 'trivia:round_detail' round.id %}">
+                    <input type="submit" value="Answer" />
+                </a>
+                {% elif round.get_status_display == 'Closed' %}
+                <a href="{% url 'trivia:round_review' round.id %}">
+                    <input type="submit" value="Review" />
+                </a>
+                {% endif %}
+                </td>
+                {% endfor %}
+                {% for r in game.finalround_set.all %}
+                <td>
+                    {% if r.status == '1' %}
+                    <a href="{% url 'trivia:final_wager' game.id %}">
+                        <input type="submit" value="Wager" />
+                    </a>
+                    {% elif r.status == '2' %}
+                    <a href="{% url 'trivia:final_answer' game.id %}">
+                        <input type="submit" value="Answer" />
+                    </a>
+                    {% elif r.status == '3' %}
+                    <a href="{% url 'trivia:check_finalanswer' game.id %}">
+                        <input type="submit" value="Check" />
+                    </a>
+                    {% endif %}
+                </td>
+                {% endfor %}
+        </tr>
+    </tbody>
+</table>
+{% else %}
+    <p>Game details are not available.</p>
+{% endif %}
+<h3>Notes</h3>
+<p>*Choose a round to double before the game starts.</p>
+<p>*The bold numbered round is the player's double round.</p>
+<p>*Click on another player's score to check their answers.</p>
+{% endblock %}

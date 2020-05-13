@@ -1,0 +1,39 @@
+{% extends 'base_site.html' %}
+
+{% block title %}Question List{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
+&rsaquo; <a href="{% url 'trivia:game_detail' round.game_id %}">{{ round.game }}</a>
+&rsaquo; {{ round.category }}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h1>Question List</h1>
+    <table>
+    <thead>
+        <th>Question</th><th>Response</th>
+    </thead>
+    <tbody>
+    {% for question in round.question_set.all %}
+    <tr>
+        <td><a href="{% url 'trivia:new_answer' game=round.game_id round=round.id question=question.id %}">{{ question }}</a></td>
+        {% for response in question.questionresponse_set.all %}
+            {% if response.player == request.user %}
+            <td>{{ response }}</td>
+            {% endif %}
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+
+<br/>
+<a href="{% url 'trivia:game_detail' round.game_id %}">
+<input type="submit" value="Back to the game!" />
+</a>
+{% endblock %}

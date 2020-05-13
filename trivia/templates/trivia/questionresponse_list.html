@@ -1,0 +1,48 @@
+{% extends 'base_site.html' %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
+&rsaquo; <a href="{% url 'trivia:game_detail' game.id %}">{{ game }}</a>
+&rsaquo; {{ round }}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<table>
+    <thead>
+        <tr>
+            <th>Question</th>
+            <th>Answer</th>
+            <th>Correct</th>
+            <th>Points</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for q in object_list %}
+        {% if q.correct == True %}
+        <tr style="font-weight: bold;">
+        {% else %}
+        <tr>
+        {% endif %}
+        <td>{{ q.question }}</td>
+        <td>{{ q }}</td>
+        <td>{{ q.correct }}</td>
+        {% if q.correct == True %}
+            <td>{{ q.points }}</td>
+        {% else %}
+            <td>0</td>
+        {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<br/>
+<a href="{% url 'trivia:game_detail' pk=game.id %}">
+<input type="submit" value="Back to the game!" />
+</a>
+
+{% endblock %}

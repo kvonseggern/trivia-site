@@ -1,0 +1,26 @@
+{% extends "base_site.html" %}
+
+{% block title %}Final Answer!{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
+&rsaquo; <a href="{% url 'trivia:game_detail' finalanswer.finalround.game.id %}">{{ finalanswer.finalround.game }}</a>
+&rsaquo; {{ finalanswer.finalround }} &rsaquo; Final Answer
+</div>
+{% endblock %}
+
+{% block content %}
+
+<form method="post">
+    {% csrf_token %}
+    Question:
+    <strong>
+    {{ finalanswer.finalround.question }}
+    </strong><br>
+    {{ form }}
+    <input type="submit" value="Submit">
+</form>
+
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base_site.html' %}
+
+{% block title %}Manage{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; Manage
+</div>
+{% endblock %}
+
+{% block content %}
+
+<p>Create new game:</p>
+<input type="submit" value="Coming Soon">
+<p>Create a new round:</p>
+<a href="{% url 'trivia:new_round' %}">
+<input type="submit" value="Create New Round with Questions">
+</a>
+
+{% endblock %}

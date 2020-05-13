@@ -1,0 +1,56 @@
+{% extends 'base_site.html' %}
+
+{% block title %}Check Answers{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
+{% if responses %}
+{% with responses|first as response %}
+&rsaquo; <a href="{% url 'trivia:game_detail' response.question.round.game.id %}">{{ response.question.round.game }}</a>
+&rsaquo; {{ response.question.round }}
+{% endwith %}
+{% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h1>{% firstof player.get_short_name player.get_username %}'s Answers</h1>
+
+<form method="post">
+{% csrf_token %}
+<table>
+    <thead>
+        <tr>
+            <th>Question</th>
+            <th>Answer</th>
+            <th>Points</th>
+            <th>{% firstof player.get_short_name player.get_username %}'s Response</th>
+            <th>Correct</th>
+        </tr>
+    </thead>
+    <tbody>
+    {{ formset.management_form }}
+    {% for form in formset %}
+        {{ form.id }}
+        <tr>
+            {% for r in responses %}
+            {% if r.id == form.id.value %}
+            <td>{{ r.question.question }}</td>
+            <td>{{ r.question.answer }}</td>
+            <td>{{ r.question.points }}</td>
+            <td>{{ r }}</td>
+            {% endif %}
+            {% endfor %}
+            <td>{{ form.correct }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<br/>
+<input type="submit" value="Submit">
+</form>
+
+{% endblock %}

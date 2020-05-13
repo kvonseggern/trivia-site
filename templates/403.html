@@ -1,0 +1,14 @@
+{% extends 'base_site.html' %}
+
+{% block content %}
+
+{% if exception %}
+  <p>{{ exception }}</p>
+{% else %}
+  <h1>403 Forbidden</h1>
+  <p>You don't have permission to do that.</p>
+{% endif %}
+
+<input type=button value="Previous Page" onClick="javascript:history.go(-1);">
+
+{% endblock %}

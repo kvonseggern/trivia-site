@@ -1,0 +1,27 @@
+{% extends "base_site.html" %}
+
+{% block title %}Answer Time{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
+&rsaquo; <a href="{% url 'trivia:game_detail' round.game.id %}">{{ round.game }}</a>
+&rsaquo; <a href="{% url 'trivia:round_detail' round.id %}">{{ round }}</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<form method="post">
+    {% csrf_token %}
+    <table>
+        <th>Question</th><th>Response</th>
+    {% for x, y in items %}
+        <tr><td>{{ x }}</td><td>{{ y }}</td></tr>
+    {% endfor %}
+    </table>
+    <input type="submit" value="Submit">
+</form>
+
+{% endblock %}
