@@ -89,6 +89,7 @@ class FinalRound(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     question = models.CharField(max_length=250)
     answer = models.CharField(max_length=250)
+    alt_answers = models.CharField(max_length=500, null=True)
     max_wager = models.IntegerField(default=0)
 
     class Meta:
@@ -120,11 +121,15 @@ class FinalRound(models.Model):
 class Question(models.Model):
     question = models.CharField(max_length=250)
     answer = models.CharField(max_length=150)
+    alt_answers = models.CharField(max_length=500, null=True)
     points = models.IntegerField(default=2)
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.question
+
+    def answer_set(self):
+        return [self.answer.strip()] + [x.strip() for x in self.alt_answers.split(',')]
 
 
 class QuestionResponse(models.Model):
