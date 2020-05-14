@@ -129,7 +129,10 @@ class Question(models.Model):
         return self.question
 
     def answer_set(self):
-        return [self.answer.strip()] + [x.strip() for x in self.alt_answers.split(',')]
+        if self.alt_answers == None:
+            return [self.answer.strip()]
+        else:
+            return [self.answer.strip()] + [x.strip() for x in self.alt_answers.split(',')]
 
 
 class QuestionResponse(models.Model):
@@ -198,3 +201,4 @@ class DoubleRound(models.Model):
 
     def get_absolute_url(self):
         return reverse('trivia:game_detail', kwargs={'pk': self.game_id})
+        
