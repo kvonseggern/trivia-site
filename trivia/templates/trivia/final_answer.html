@@ -6,8 +6,8 @@
 <div class="breadcrumbs">
 <a href="{% url 'trivia:index' %}">Home</a>
 &rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
-&rsaquo; <a href="{% url 'trivia:game_detail' finalanswer.finalround.game.id %}">{{ finalanswer.finalround.game }}</a>
-&rsaquo; {{ finalanswer.finalround }} &rsaquo; Final Answer
+&rsaquo; <a href="{% url 'trivia:game_detail' finalresponse.final_round.game.id %}">{{ finalresponse.final_round.game }}</a>
+&rsaquo; {{ finalresponse.final_round }} &rsaquo; Final Answer
 </div>
 {% endblock %}
 
@@ -17,7 +17,7 @@
     {% csrf_token %}
     Question:
     <strong>
-    {{ finalanswer.finalround.question }}
+    {{ finalresponse.final_round.question }}
     </strong><br>
     {{ form }}
     <input type="submit" value="Submit">

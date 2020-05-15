@@ -44,7 +44,7 @@ class Game(models.Model):
         return dict
 
 
-class Round(models.Model):
+class BaseRound(models.Model):
     STATUS_CHOICES = [
         ('0', 'Not Open'),
         ('1', 'Answer Time'),
@@ -61,10 +61,47 @@ class Round(models.Model):
     def get_absolute_url(self):
         return reverse('trivia:game_detail', kwargs={'pk': self.game_id})
 
+    class Meta:
+        abstract = True
+
+
+class BaseQuestion(models.Model):
+    question = models.CharField(max_length=250)
+    answer = models.CharField(max_length=150)
+    alt_answers = models.CharField(max_length=500, null=True)
+    points = models.IntegerField(default=2)
+
+    def __str__(self):
+        return self.question
+
+    def answer_set(self):
+        if self.alt_answers == None:
+            return [self.answer.strip()]
+        else:
+            return [self.answer.strip()] + [x.strip() for x in self.alt_answers.split(',')]
+
+    class Meta:
+        abstract = True
+
+
+class BaseResponse(models.Model):
+    correct = models.BooleanField(default=False)
+    response = models.CharField(max_length=150)
+    player = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.response      
+
+    class Meta:
+        abstract = True
+
+
+class Round(BaseRound):
+
     def score_round(self):
         dict = {}
         for player in self.game.player.all():
-            correct = QuestionResponse.objects.filter(player=player, question__round=self, correct=True)
+            correct = Response.objects.filter(player=player, question__round=self, correct=True)
             score = correct.aggregate(Sum('question__points'))['question__points__sum'] or 0
             try:
                 double_round = DoubleRound.objects.get(round=self, player=player)
@@ -76,30 +113,8 @@ class Round(models.Model):
         return dict
 
 
-class FinalRound(models.Model):
-    STATUS_CHOICES = [
-        ('0', 'Not Open'),
-        ('1', 'Wager'),
-        ('2', 'Answer Time'),
-        ('3', 'Check Answers'),
-        ('4', 'Closed'),
-    ]
-    category = models.CharField(max_length=100)
-    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=0)
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    question = models.CharField(max_length=250)
-    answer = models.CharField(max_length=250)
-    alt_answers = models.CharField(max_length=500, null=True)
-    max_wager = models.IntegerField(default=0)
-
-    class Meta:
-        constraints = [models.UniqueConstraint(fields=['game'], name='one_final_round')]
-
-    def __str__(self):
-        return self.category
-
-    def get_absolute_url(self):
-        return reverse('trivia:game_detail', kwargs={'pk': self.game_id})
+class FinalRound(BaseRound, BaseQuestion):
+    points = models.IntegerField(default=0)
 
     def score_finalround(self):
         dict = {}
@@ -108,82 +123,56 @@ class FinalRound(models.Model):
                 dict[player] = {self: 0}
             else:
                 try:
-                    final_answer = FinalAnswer.objects.get(player=player, finalround__game=self.game)   
-                    if final_answer.correct:
-                        dict[player] = {self: final_answer.wager}
+                    final_response = FinalResponse.objects.get(player=player, finalround__game=self.game)   
+                    if final_response.correct:
+                        dict[player] = {self: final_response.wager}
                     else:
-                        dict[player] = {self: -final_answer.wager}
-                except FinalAnswer.DoesNotExist:
+                        dict[player] = {self: -final_response.wager}
+                except FinalResponse.DoesNotExist:
                     dict[player] = {self: 0}
         return dict
 
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['game'], name='one_final_round')]
 
-class Question(models.Model):
-    question = models.CharField(max_length=250)
-    answer = models.CharField(max_length=150)
-    alt_answers = models.CharField(max_length=500, null=True)
-    points = models.IntegerField(default=2)
+
+class Question(BaseQuestion):
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
 
-    def __str__(self):
-        return self.question
 
-    def answer_set(self):
-        if self.alt_answers == None:
-            return [self.answer.strip()]
-        else:
-            return [self.answer.strip()] + [x.strip() for x in self.alt_answers.split(',')]
-
-
-class QuestionResponse(models.Model):
-    correct = models.BooleanField(default=False)
-    response = models.CharField(max_length=150)
+class Response(BaseResponse):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    player = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def get_absolute_url(self):
+        return reverse('trivia:round_detail', kwargs={'pk': self.question.round_id})
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['player', 'question'], name='unique_answer')
         ]
 
-    def __str__(self):
-        return self.response
 
-    def get_absolute_url(self):
-        return reverse('trivia:round_detail', kwargs={'pk': self.question.round_id})
-
-
-class FinalAnswer(models.Model):
-    finalround = models.ForeignKey(FinalRound, on_delete=models.CASCADE)
-    player = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    wager = models.IntegerField(default=0)
-    answer = models.CharField(max_length=200, null=True)
-    correct = models.BooleanField(default=False)
-
-    def get_absolute_url(self):
-        return reverse('trivia:game_detail', kwargs={'pk': self.finalround.game.id})
+class FinalResponse(BaseResponse):
+    wager = models.IntegerField(default=None, null=True)
+    final_round = models.ForeignKey(FinalRound, on_delete=models.CASCADE)
 
     def clean(self):
-        max_wager = self.finalround.max_wager
-        game = self.finalround.game
+        max_wager = self.final_round.points
+        game = self.final_round.game
         score = game.score_rounds()[self.player]['total']
         if max_wager > 0 and self.wager > max_wager:
             raise ValidationError(f'Above max wager. Max wager is {max_wager}.')
         elif max_wager == 0 and self.wager > score:
             raise ValidationError(f'Your max wager is your score. You have {score}.')
 
-    def save(self, *args, **kwargs):
-        '''
-        if self.finalround.status != ('1' or '2'):
-            return PermissionDenied("The round status doesn't allow that.")
-        else:
-        '''
-        super().save(*args, **kwargs)
+    def get_absolute_url(self):
+        return reverse('trivia:game_detail', kwargs={'pk': self.final_round.game.id})
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['finalround', 'player'], name='one_final_answer')
+            models.UniqueConstraint(fields=['final_round', 'player'], name='one_final_answer')
         ]
+
 
 class DoubleRound(models.Model):
     player = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -197,7 +186,7 @@ class DoubleRound(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.player}: {self.game}, {self.round}'
+        return self.round
 
     def get_absolute_url(self):
         return reverse('trivia:game_detail', kwargs={'pk': self.game_id})

@@ -1,12 +1,12 @@
 from django.forms import ModelForm
 
-from .models import FinalAnswer
+from .models import FinalResponse
 
 
-class FinalAnswerForm(ModelForm):
+class FinalResponseForm(ModelForm):
     class Meta:
-        model = FinalAnswer
+        model = FinalResponse
         fields = [
-            'finalround',
+            'final_round',
             'player'
         ]

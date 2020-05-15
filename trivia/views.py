@@ -14,10 +14,10 @@ from django.views import generic
 from django.views.generic.edit import CreateView, UpdateView
 
 from .models import (
-    FinalAnswer, Game, Round, Question,
-    QuestionResponse, DoubleRound, FinalRound
+    FinalResponse, Game, Round, Question,
+    Response, DoubleRound, FinalRound
 )
-from .forms import FinalAnswerForm
+from .forms import FinalResponseForm
 
 # Create your views here.
 
@@ -27,9 +27,9 @@ def staff_check(user):
     return user.is_staff
 
 def check_answers_func(pk):
-    query = QuestionResponse.objects.filter(question__round_id=pk)
+    query = Response.objects.filter(question__round_id=pk)
     QRFormSet = modelformset_factory(
-        QuestionResponse, fields=('response', 'correct',), extra=0
+        Response, fields=('response', 'correct',), extra=0
     )
     formset = QRFormSet(queryset=query)
     instances = formset.save(commit=False)
@@ -61,21 +61,21 @@ class RoundDetailView(LoginRequiredMixin, generic.DetailView):
     model = Round
 
 
-class QuestionResponseCreate(LoginRequiredMixin, CreateView):
-    model = QuestionResponse
+class ResponseCreate(LoginRequiredMixin, CreateView):
+    model = Response
     fields = ['response']
-    template_name = 'trivia/questionresponse_form.html'
+    template_name = 'trivia/response_form.html'
 
     def get(self, request, *args, **kwargs):
         try:
             # If object exists, redirect to update view
-            question_response = QuestionResponse.objects.get(
+            response = Response.objects.get(
                 player__id=request.user.id, question__id=kwargs['question']
             )
             return HttpResponseRedirect(
-                reverse('trivia:update_answer', kwargs={'pk': question_response.id})
+                reverse('trivia:update_answer', kwargs={'pk': response.id})
             )
-        except QuestionResponse.DoesNotExist:
+        except Response.DoesNotExist:
             return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -101,13 +101,13 @@ class QuestionResponseCreate(LoginRequiredMixin, CreateView):
         return super().post(request, *args, **kwargs)
     '''
 
-class QuestionResponseUpdate(LoginRequiredMixin, UpdateView):
-    model = QuestionResponse
-    template_name = 'trivia/questionresponse_form.html'
+class ResponseUpdate(LoginRequiredMixin, UpdateView):
+    model = Response
+    template_name = 'trivia/response_form.html'
     fields = ['response']
 
     def post(self, request, *args, **kwargs):
-        round = Round.objects.get(question__questionresponse__id=kwargs['pk'])
+        round = Round.objects.get(question__response__id=kwargs['pk'])
         if round.status != '1':
             messages.error(request, "The round status doesn't allow that.")
             return HttpResponseRedirect(
@@ -141,12 +141,12 @@ class FinalRoundStatusUpdate(UserPassesTestMixin, UpdateView):
 
 
 class FinalRoundWagerUpdate(UpdateView):
-    model = FinalAnswer
+    model = FinalResponse
     fields = ['wager']
     template_name = 'trivia/wager_form.html'
 
     def post(self, request, *args, **kwargs):
-        final_round = FinalRound.objects.get(finalanswer__id=self.kwargs['pk'])
+        final_round = FinalRound.objects.get(finalresponse__id=self.kwargs['pk'])
         if final_round.status != '1':
             messages.error(request, 'The time to wager has passed! Your wager did not get updated.')
             return HttpResponseRedirect(
@@ -158,28 +158,28 @@ class FinalRoundWagerUpdate(UpdateView):
 @login_required
 def finalwager(request, **kwargs):
     try:
-        obj = FinalAnswer.objects.get(finalround__game_id=kwargs['game'], player=request.user)
-    except FinalAnswer.DoesNotExist:
+        obj = FinalResponse.objects.get(final_round__game_id=kwargs['game'], player=request.user)
+    except FinalResponse.DoesNotExist:
         # Create a blank final answer form if it does not already exist
         final_round = FinalRound.objects.get(game_id=kwargs['game'])
-        form = FinalAnswerForm()
+        form = FinalResponseForm()
         obj = form.save(commit=False)
-        obj.finalround = final_round
+        obj.final_round = final_round
         obj.player = request.user
         obj.save()
     return HttpResponseRedirect(reverse('trivia:final_wager_update', kwargs={'pk': obj.id}))
 
 
 class FinalAnswerUpdate(UpdateView):
-    model = FinalAnswer
-    fields = ['answer']
+    model = FinalResponse
+    fields = ['response']
     template_name = 'trivia/final_answer.html'
 
 
 @login_required
 def finalanswer(request, **kwargs):
     # Find the FinalAnswer object for the user and redirect to the update view
-    final_answer = FinalAnswer.objects.get(player=request.user, finalround__game_id=kwargs['game'])
+    final_answer = FinalResponse.objects.get(player=request.user, final_round__game_id=kwargs['game'])
     return HttpResponseRedirect(
         reverse('trivia:final_answer_update', kwargs={'pk': final_answer.id})
     )
@@ -196,12 +196,12 @@ def check_answers(request, **kwargs):
     if round_obj.status != '2' and not request.user.is_staff:
         raise PermissionDenied("It's not time to check the round!")
     params = {'player__id': kwargs['player'], 'question__round__id': kwargs['round']}
-    q_set = QuestionResponse.objects.filter(**params)
-    QuestionResponseFormSet = modelformset_factory(
-        QuestionResponse, fields=('correct',), extra=0,
+    q_set = Response.objects.filter(**params)
+    ResponseFormSet = modelformset_factory(
+        Response, fields=('correct',), extra=0,
     )
     if request.method == "POST":
-        formset = QuestionResponseFormSet(
+        formset = ResponseFormSet(
             request.POST, request.FILES, queryset=q_set,
         )
         if formset.is_valid():
@@ -210,7 +210,7 @@ def check_answers(request, **kwargs):
                 reverse('trivia:game_detail', kwargs={'pk': kwargs['game']})
             )
     else:
-        formset = QuestionResponseFormSet(queryset=q_set)
+        formset = ResponseFormSet(queryset=q_set)
     kwargs['formset'] = formset
     kwargs['responses'] = q_set
     kwargs['player'] = User.objects.get(id=kwargs['player'])
@@ -222,7 +222,7 @@ def check_answers(request, **kwargs):
 @login_required
 def manage_finalanswers(request, **kwargs):
     FinalFormSet = inlineformset_factory(
-        FinalRound, FinalAnswer, fields=('correct',), can_delete=False, extra=0
+        FinalRound, FinalResponse, fields=('correct',), can_delete=False, extra=0
     )
     if request.method == "POST":
         formset = FinalFormSet(
@@ -236,7 +236,7 @@ def manage_finalanswers(request, **kwargs):
     else:
         formset = FinalFormSet(instance=FinalRound.objects.get(game_id=kwargs['game']))
     kwargs['formset'] = formset
-    kwargs['final_answers'] = FinalAnswer.objects.filter(finalround__game_id=kwargs['game'])
+    kwargs['final_answers'] = FinalResponse.objects.filter(finalround__game_id=kwargs['game'])
     return render(request, 'trivia/finalanswer_check.html', kwargs)
 
 
