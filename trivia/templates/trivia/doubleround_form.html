@@ -1,3 +1,4 @@
+
 {% extends 'base_site.html' %}
 
 {% block title %}Choose a Double Round{% endblock %}
@@ -6,8 +7,9 @@
 <div class="breadcrumbs">
 <a href="{% url 'trivia:index' %}">Home</a>
 &rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
-&rsaquo; <a href="{% url 'trivia:game_detail' round.game_id %}">{{ round.game }}</a>
-&rsaquo; {{ round }}
+{% if object %}
+&rsaquo; <a href="{% url 'trivia:game_detail' object.game_id %}">{{ object.game }}</a>
+{% endif %}
 </div>
 {% endblock %}
 

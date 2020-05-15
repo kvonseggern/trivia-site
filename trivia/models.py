@@ -190,3 +190,4 @@ class DoubleRound(models.Model):
 
     def get_absolute_url(self):
         return reverse('trivia:game_detail', kwargs={'pk': self.game_id})
+        
