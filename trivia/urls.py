@@ -1,4 +1,3 @@
-from trivia.views import DoubleRoundUpdate, FinalAnswerUpdate, FinalRoundStatusUpdate, FinalRoundWagerUpdate, manage_finalanswers
 from django.urls import path
 
 from . import views
