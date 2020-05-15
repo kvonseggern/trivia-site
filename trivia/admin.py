@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import DoubleRound, FinalAnswer, Game, Round, Question, QuestionResponse, FinalRound
+from .models import DoubleRound, FinalResponse, Game, Round, Question, Response, FinalRound
 
 # Register your models here.
 
-admin.site.register([Game, Round, Question, QuestionResponse, DoubleRound, FinalRound, FinalAnswer])
+admin.site.register([Game, Round, Question, Response, DoubleRound, FinalRound, FinalResponse])
