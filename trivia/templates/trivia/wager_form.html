@@ -6,14 +6,14 @@
 <div class="breadcrumbs">
 <a href="{% url 'trivia:index' %}">Home</a>
 &rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
-&rsaquo; <a href="{% url 'trivia:game_detail' finalanswer.finalround.game.id %}">{{ finalanswer.finalround.game }}</a>
+&rsaquo; <a href="{% url 'trivia:game_detail' finalresponse.final_round.game.id %}">{{ finalresponse.final_round.game }}</a>
 &rsaquo; Wager
 </div>
 {% endblock %}
 
 {% block content %}
 
-<h2>Category: {{ finalanswer.finalround }}</h2>
+<h2>Category: {{ finalresponse.final_round }}</h2>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}

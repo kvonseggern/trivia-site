@@ -134,7 +134,7 @@ class FinalRound(BaseRound, BaseQuestion):
 
 
 class Question(BaseQuestion):
-    pass
+    round = models.ForeignKey(Round, on_delete=models.CASCADE)
 
 
 class Response(BaseResponse):
@@ -150,7 +150,7 @@ class Response(BaseResponse):
 
 
 class FinalResponse(BaseResponse):
-    wager = models.IntegerField(default=None)
+    wager = models.IntegerField(default=None, null=True)
     final_round = models.ForeignKey(FinalRound, on_delete=models.CASCADE)
 
     def clean(self):

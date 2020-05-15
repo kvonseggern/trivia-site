@@ -158,13 +158,13 @@ class FinalRoundWagerUpdate(UpdateView):
 @login_required
 def finalwager(request, **kwargs):
     try:
-        obj = FinalResponse.objects.get(finalround__game_id=kwargs['game'], player=request.user)
+        obj = FinalResponse.objects.get(final_round__game_id=kwargs['game'], player=request.user)
     except FinalResponse.DoesNotExist:
         # Create a blank final answer form if it does not already exist
         final_round = FinalRound.objects.get(game_id=kwargs['game'])
         form = FinalResponseForm()
         obj = form.save(commit=False)
-        obj.finalround = final_round
+        obj.final_round = final_round
         obj.player = request.user
         obj.save()
     return HttpResponseRedirect(reverse('trivia:final_wager_update', kwargs={'pk': obj.id}))
@@ -172,14 +172,14 @@ def finalwager(request, **kwargs):
 
 class FinalAnswerUpdate(UpdateView):
     model = FinalResponse
-    fields = ['answer']
+    fields = ['response']
     template_name = 'trivia/final_answer.html'
 
 
 @login_required
 def finalanswer(request, **kwargs):
     # Find the FinalAnswer object for the user and redirect to the update view
-    final_answer = FinalResponse.objects.get(player=request.user, finalround__game_id=kwargs['game'])
+    final_answer = FinalResponse.objects.get(player=request.user, final_round__game_id=kwargs['game'])
     return HttpResponseRedirect(
         reverse('trivia:final_answer_update', kwargs={'pk': final_answer.id})
     )
