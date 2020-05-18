@@ -1,0 +1,24 @@
+{% extends "base_site.html" %}
+
+{% block title %}Answer Time{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'trivia:index' %}">Home</a>
+&rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
+&rsaquo; <a href="{% url 'trivia:game_detail' game %}">{{ form.instance.question.round.game }}</a>
+&rsaquo; <a href="{% url 'trivia:round_detail' round %}">{{ form.instance.question.round }}</a>
+&rsaquo; Answer
+</div>
+{% endblock %}
+
+{% block content %}
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.instance.question }}
+    {{ form.as_p}}
+    <input type="submit" value="Submit">
+</form>
+
+{% endblock %}

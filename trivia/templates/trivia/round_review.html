@@ -34,7 +34,7 @@
             <td>{{ q.points }}</td>
             {% for p in round.game.player.all %}
             <td>
-            {% for i in q.questionresponse_set.all %}
+            {% for i in q.response_set.all %}
                 {% if p == i.player %}
                 {% if i.question == q %}
                 {% if i.correct == True %}

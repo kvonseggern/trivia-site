@@ -76,9 +76,10 @@ class BaseQuestion(models.Model):
 
     def answer_set(self):
         if self.alt_answers == None:
-            return [self.answer.strip()]
+            return [self.answer.strip().lower()]
         else:
-            return [self.answer.strip()] + [x.strip() for x in self.alt_answers.split(',')]
+            alts = [x.strip().lower() for x in self.alt_answers.split(',')]
+            return [self.answer.strip().lower()] + alts
 
     class Meta:
         abstract = True
@@ -90,30 +91,43 @@ class BaseResponse(models.Model):
     player = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.response      
+        return self.response
 
     class Meta:
         abstract = True
 
 
 class Round(BaseRound):
-
     def score_round(self):
         dict = {}
         for player in self.game.player.all():
-            correct = Response.objects.filter(player=player, question__round=self, correct=True)
-            score = correct.aggregate(Sum('question__points'))['question__points__sum'] or 0
-            try:
-                double_round = DoubleRound.objects.get(round=self, player=player)
-                if self == double_round.round:
-                    score *= double_round.multiplier
-            except DoubleRound.DoesNotExist:
-                pass
+            score = 0
+            for question in self.question_set.filter(round=self):
+                for response in question.response_set.filter(player=player):
+                    score += response.score_response()
             dict[player] = {self: score}
         return dict
 
+    def check_round(self):
+        for question in self.question_set.all():
+            for response in question.response_set.all():
+                response.check_response()
+
+    def save(self, *args, **kwargs):
+        if self.status == '2':
+            self.check_round()
+        super().save(*args, **kwargs) 
+
 
 class FinalRound(BaseRound, BaseQuestion):
+    STATUS_CHOICES = [
+        ('0', 'Not Open'),
+        ('1', 'Wager'),
+        ('2', 'Answer Time'),
+        ('3', 'Check Answers'),
+        ('4', 'Closed'),
+    ]
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=0)
     points = models.IntegerField(default=0)
 
     def score_finalround(self):
@@ -123,7 +137,7 @@ class FinalRound(BaseRound, BaseQuestion):
                 dict[player] = {self: 0}
             else:
                 try:
-                    final_response = FinalResponse.objects.get(player=player, finalround__game=self.game)   
+                    final_response = FinalResponse.objects.get(player=player, final_round__game=self.game)   
                     if final_response.correct:
                         dict[player] = {self: final_response.wager}
                     else:
@@ -145,6 +159,23 @@ class Response(BaseResponse):
 
     def get_absolute_url(self):
         return reverse('trivia:round_detail', kwargs={'pk': self.question.round_id})
+
+    def check_response(self):
+        if self.response.strip() in self.question.answer_set():
+            self.correct = True
+            self.save()
+
+    def score_response(self):
+        if self.correct:
+            try:
+                double_round = self.question.round.doubleround_set.get(player=self.player)
+                multiplier = double_round.multiplier
+                score = self.question.points * multiplier
+            except DoubleRound.DoesNotExist:
+                score = self.question.points
+            return score
+        else:
+            return 0
 
     class Meta:
         constraints = [
@@ -177,7 +208,7 @@ class FinalResponse(BaseResponse):
 class DoubleRound(models.Model):
     player = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    round = models.ForeignKey(Round, on_delete=models.CASCADE, null=True)
     multiplier = models.IntegerField(default=2)
 
     class Meta:
@@ -190,4 +221,3 @@ class DoubleRound(models.Model):
 
     def get_absolute_url(self):
         return reverse('trivia:game_detail', kwargs={'pk': self.game_id})
-        
