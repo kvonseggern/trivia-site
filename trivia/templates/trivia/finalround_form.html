@@ -4,7 +4,7 @@
 <div class="breadcrumbs">
 <a href="{% url 'trivia:index' %}">Home</a>
 &rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
-&rsaquo; <a href="{% url 'trivia:game_detail' final_round.game_id %}">{{ final_round.game }}</a>
+&rsaquo; <a href="{% url 'trivia:game_detail' 1 %}">{{ final_round.game }}</a>
 &rsaquo; Round Status
 </div>
 {% endblock %}

@@ -6,7 +6,11 @@
 <div class="breadcrumbs">
 <a href="{% url 'trivia:index' %}">Home</a>
 &rsaquo; <a href="{% url 'trivia:games' %}">Game List</a>
-&rsaquo; <a href="{% url 'trivia:game_detail' finalanswer.final_round.game.id %}">{{ finalanswer.final_round.game }}</a>
+&rsaquo; <a href="{% url 'trivia:game_detail' game %}">
+    {% with final_answers|first as final %}
+    {{ final.final_round.game }}
+    {% endwith %}
+</a>
 &rsaquo; Final Answer Check
 </div>
 {% endblock %}
@@ -34,7 +38,7 @@
                     {% for a in final_answers %}
                     {% if a.id == form.instance.id %}
                     <td>{{ a.player }}</td>
-                    <td>{{ a.answer }}</td>
+                    <td>{{ a.response }}</td>
                     {% endif %}
                     {% endfor %}
                     <td>{{ form.correct }}</td>

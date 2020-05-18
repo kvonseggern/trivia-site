@@ -22,7 +22,7 @@
     {% for question in round.question_set.all %}
     <tr>
         <td><a href="{% url 'trivia:new_answer' game=round.game_id round=round.id question=question.id %}">{{ question }}</a></td>
-        {% for response in question.questionresponse_set.all %}
+        {% for response in question.response_set.all %}
             {% if response.player == request.user %}
             <td>{{ response }}</td>
             {% endif %}
